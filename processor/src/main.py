@@ -4,13 +4,14 @@ import asyncio
 import click
 import logging
 import sys
+from typing import TypedDict
 
 from src.config import settings
 from src.core.review import run_review_graph
 from src.queue import start_queue_worker
 
 logging.basicConfig(
-    format="%(asctime)s %(levelname)7s %(message)s",
+    format="%(asctime)s %(levelname)7s [%(process)d-%(threadName)s] %(message)s",
     datefmt="%H:%M:%S",
     level=logging.INFO,
 )
@@ -56,8 +57,14 @@ def main(
         logger.info("🚀 Starting Critiquely Queue Worker")
         start_queue_worker()
     else:
+        class RequiredArgs(TypedDict):
+            repo_url: str
+            original_pr_url: str
+            branch: str
+            modified_files: str
+
         # Validate required arguments for CLI mode
-        required_args = {
+        required_args: RequiredArgs = {
             'repo_url': repo_url,
             'original_pr_url': original_pr_url,
             'branch': branch,
