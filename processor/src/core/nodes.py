@@ -7,7 +7,8 @@ from typing import Optional, Any
 from urllib.parse import urlparse
 from uuid import uuid4
 
-from git import Repo, GitCommandError, InvalidGitRepositoryError, NoSuchPathError
+from git import Repo
+from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 from github import Auth, Github
 from github.GithubException import GithubException
 from langchain_core.messages import HumanMessage
@@ -86,14 +87,32 @@ class GitOperations:
     """Shared Git operations with consistent error handling"""
     
     @staticmethod
+    def handle_git_exception(operation: str, exc: Exception) -> None:
+        """Centralized exception handler for Git operations
+        
+        Args:
+            operation: Description of the Git operation that failed
+            exc: The caught exception
+            
+        Raises:
+            GitOperationError: Always raised with standardized error message
+        """
+        if isinstance(exc, (NoSuchPathError, InvalidGitRepositoryError)):
+            msg = f"❌ Error: Invalid or missing Git repository: {exc}"
+        elif isinstance(exc, GitCommandError):
+            msg = f"❌ Git operation failed: {exc}"
+        else:
+            msg = f"❌ Unexpected error during Git operation: {exc}"
+        logger.error(f"{msg} (during {operation})")
+        raise GitOperationError(msg)
+    
+    @staticmethod
     def get_repo(clone_path: str) -> Repo:
         """Open a repo with standardized error handling"""
         try:
             return Repo(clone_path)
         except (NoSuchPathError, InvalidGitRepositoryError) as e:
-            msg = f"❌ Error: Cannot open repo at '{clone_path}': {e}"
-            logger.error(msg)
-            raise GitOperationError(msg)
+            GitOperations.handle_git_exception(f"opening repo at '{clone_path}')", e)
     
     @staticmethod
     def setup_remote_with_token(repo: Repo, repo_url: str) -> Any:
