@@ -7,7 +7,7 @@ from typing import Optional, Any
 from urllib.parse import urlparse
 from uuid import uuid4
 
-from git import Repo, GitCommandError, InvalidGitRepositoryError, NoSuchPathError
+import git
 from github import Auth, Github
 from github.GithubException import GithubException
 from langchain_core.messages import HumanMessage
