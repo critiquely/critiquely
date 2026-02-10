@@ -52,11 +52,8 @@ def main(
 ) -> None:
     """Critiquely - Code review tool with CLI and queue processing modes."""
     
-    if queue_mode:
-        logger.info("🚀 Starting Critiquely Queue Worker")
-        start_queue_worker()
-    else:
-        # Validate required arguments for CLI mode
+    def validate_cli_args(repo_url: str, original_pr_url: str, branch: str, modified_files: str) -> None:
+        """Validate required arguments for CLI mode."""
         required_args = {
             'repo_url': repo_url,
             'original_pr_url': original_pr_url,
@@ -69,6 +66,12 @@ def main(
             logger.error(f"❌ Missing required arguments for CLI mode: {', '.join(missing_args)}")
             logger.info("💡 Use --queue-mode to run as a queue worker, or provide all required CLI arguments")
             sys.exit(1)
+
+    if queue_mode:
+        logger.info("🚀 Starting Critiquely Queue Worker")
+        start_queue_worker()
+    else:
+        validate_cli_args(repo_url, original_pr_url, branch, modified_files)
 
         async def run():
             if not settings.github_token:
