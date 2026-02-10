@@ -90,10 +90,10 @@ class GitOperations:
         """Open a repo with standardized error handling"""
         try:
             return Repo(clone_path)
-        except (NoSuchPathError, InvalidGitRepositoryError) as e:
-            msg = f"❌ Error: Cannot open repo at '{clone_path}': {e}"
-            logger.error(msg)
-            raise GitOperationError(msg)
+        except Exception as e:
+        msg = f"❌ Error: Cannot open repo at '{clone_path}': {e}"
+        logger.error(msg)
+        raise GitOperationError(msg)
     
     @staticmethod
     def setup_remote_with_token(repo: Repo, repo_url: str) -> Any:
@@ -168,7 +168,7 @@ def create_branch(state: DevAgentState) -> DevAgentState:
 
     try:
         repo = Repo(clone_path)
-    except (NoSuchPathError, InvalidGitRepositoryError) as e:
+    except Exception as e:
         msg = f"❌ Error: Cannot open repo at '{clone_path}': {e}"
         logger.error(msg)
         return {"messages": [HumanMessage(content=msg)]}

@@ -8,14 +8,10 @@ import sys
 from src.config import settings
 from src.core.review import run_review_graph
 from src.queue import start_queue_worker
+from src.config.logging import configure_logging
 
-logging.basicConfig(
-    format="%(asctime)s %(levelname)7s %(message)s",
-    datefmt="%H:%M:%S",
-    level=logging.INFO,
-)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
+# Initialize logging configuration from central config
+configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -56,19 +52,23 @@ def main(
         logger.info("🚀 Starting Critiquely Queue Worker")
         start_queue_worker()
     else:
-        # Validate required arguments for CLI mode
-        required_args = {
-            'repo_url': repo_url,
-            'original_pr_url': original_pr_url,
-            'branch': branch,
-            'modified_files': modified_files
-        }
-        
-        missing_args = [arg for arg, value in required_args.items() if not value]
-        if missing_args:
-            logger.error(f"❌ Missing required arguments for CLI mode: {', '.join(missing_args)}")
-            logger.info("💡 Use --queue-mode to run as a queue worker, or provide all required CLI arguments")
-            sys.exit(1)
+        validate_cli_arguments(repo_url, original_pr_url, branch, modified_files)
+
+
+def validate_cli_arguments(repo_url: str, original_pr_url: str, branch: str, modified_files: str) -> None:
+    """Validate required CLI arguments and exit if any are missing."""
+    required_args = {
+        'repo_url': repo_url,
+        'original_pr_url': original_pr_url,
+        'branch': branch,
+        'modified_files': modified_files
+    }
+    
+    missing_args = [arg for arg, value in required_args.items() if not value]
+    if missing_args:
+        logger.error(f"❌ Missing required arguments for CLI mode: {', '.join(missing_args)}")
+        logger.info("💡 Use --queue-mode to run as a queue worker, or provide all required CLI arguments")
+        sys.exit(1)
 
         async def run():
             if not settings.github_token:
